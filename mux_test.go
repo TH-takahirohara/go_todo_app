@@ -1,16 +1,28 @@
 package main
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/TH-takahirohara/go_todo_app/config"
 )
 
 func TestNewMux(t *testing.T) {
 	w := httptest.NewRecorder()
 	r := httptest.NewRequest(http.MethodGet, "/health", nil)
-	sut := NewMux()
+	cfg, err := config.New()
+	if err != nil {
+		t.Fatalf("failed to read config: %v", err)
+	}
+	ctx := context.Background()
+	sut, cleanup, err := NewMux(ctx, cfg)
+	if err != nil {
+		t.Fatalf("failed to get mux: %v", err)
+	}
+	defer cleanup()
 	sut.ServeHTTP(w, r)
 	resp := w.Result()
 	t.Cleanup(func() { _ = resp.Body.Close() })
